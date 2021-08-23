@@ -8,13 +8,11 @@
 
 
 
-Temos apenas uma fonte de dados: arquivos em formato `json` provenientes de uma _api_. Para pensar na captura desses dados, precisamos considerar o volume e a periodicidade desses dados. No ecossistema AWS, temos duas soluções que são vastamente utilizadas para resolver esse tipo de problema: _Lambda_ e _S3_.
+Temos apenas uma fonte de dados: arquivos em formato `json` provenientes de uma _api_. No ecossistema AWS, temos duas soluções que são vastamente utilizadas para resolver esse tipo de problema: _Lambda_ e _S3_.
 
-AWS _Lambda_ é um executor de funções _serverless_, ou seja, não precisamos pensar na escala dos servidores da aplicação, apenas em quanto iremos rodar, baseado em eventos ou em algum cronograma. Considerei o _lambda_ como melhor opção pela simplicidade de implementação, já que temos uma API como fonte, podemos fazer uma função _lambda_ que puxa os dados da API e os insere no _S3_. Mas por que o _S3_?
+AWS _Lambda_ é um executor de funções _serverless_, ou seja, não precisamos pensar na escala dos servidores da aplicação, apenas em quanto iremos rodar, baseado em eventos ou em algum cronograma. Considerei o _lambda_ como melhor opção pela simplicidade de implementação, como temos uma API como fonte, podemos fazer uma função _lambda_ que puxa os dados da API e os insere no _S3_. Mas por que o _S3_?
 
-o AWS _S3_ é amplamente utilizado como _data lake_, pois nos traz escalabilidade, segurança e organização, podemos ter um _bucket_ (estrutura de pasta do _S3_) onde guardamos os dados brutos da nossa API.
-
-Salvar dados brutos é importante para consistência e checagem, precisamos garantir que caso haja algum problema com a API ou com alguma das etapas sequentes, teremos os dados para reutilização ou checagem.
+o AWS _S3_ é amplamente utilizado como _data lake_, pois nos traz escalabilidade, segurança e organização ao salvar objetos de diversos formatos e schemas. Podemos ter um _bucket_ (estrutura de pasta do _S3_) onde guardamos os dados brutos da nossa API. Salvar dados brutos é importante para consistência, precisamos garantir que caso haja algum problema com a API ou com alguma das etapas sequentes, teremos os dados para reutilização ou checagem.
 
 Já temos nossa base: chamada de API e dados brutos, o que falta? Validação! 
 
@@ -24,7 +22,7 @@ temos dados validados e trasnsformados, e agora?
 
 Um passo importante antes de adicionar dados ao _Redshift_ é criar um controle de estado, o que isso significa? Controle de estado é uma técnica utilizada para classificar nossos _jobs_ (`Running`, `Completed`, `Failed`, etc), ter noção de quais arquivos estão atribuidos a esses _jobs_ e adicionar quaisquer parâmetros que forem julgados necessários antes de um processamento final. Os metadados criados nessa etapa são guardados em uma base relacional, nesse caso o _MySQL_, utilizando o _RDS_, conector da AWS para bancos relacionais.
 
-Para utilizar os metadados criados, precisamos de duas funções lambda separadas, uma que lê os metadados e envia os dados preparados para o job EMR Spark que vai carregar os dados no nosso banco _Redshift_, e outra para monitorar a primeira função e atualizar os metadados de acordo com a saída.
+Para utilizar os metadados criados, precisamos de duas funções lambda separadas, uma que lê os metadados e envia os dados preparados para o job _EMR Spark_ que vai carregar os dados no nosso banco _Redshift_, e outra para monitorar a primeira função e atualizar os metadados de acordo com a saída.
 
 Nosso pipeline está completo, mas ainda precisamos de um monitoramento, para isso, escolhi o _CloudWatch_ pela facilidade de integração com as funções _lambda_, presentes do início ao fim da arquitetura.
 
